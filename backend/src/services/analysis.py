@@ -5,6 +5,8 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 FEATURES=['weekly_reading','completion','night_share']
 SEED=3107
+def snapshot_checksum(rows):
+ return hashlib.sha256(json.dumps(rows,sort_keys=True,ensure_ascii=False).encode()).hexdigest()
 def cluster(rows,features,k):
  if len(features)<2 or len(set(features))!=len(features) or not set(features)<=set(FEATURES):raise ValueError('选择2–3个不同的有效特征')
  if k<2 or k>6:raise ValueError('分群数仅支持2–6')
@@ -22,4 +24,4 @@ def cluster(rows,features,k):
  for old in order:
   members=[r for r in memberships if r['cluster_id']==mapping[old]]
   profiles.append(dict(cluster_id=mapping[old],size=len(members),portrait={f:float(np.mean([r[f] for r in members])) for f in FEATURES},center_inverse={f:float(v) for f,v in zip(features,centers[old])},member_codes=[r['code'] for r in members]))
- return dict(n=len(rows),k=k,features=features,profiles=profiles,members=memberships,silhouette=float(silhouette_score(z,labels)),inertia=float(model.inertia_),scaler_mean=scaler.mean_.tolist(),scaler_scale=scaler.scale_.tolist(),seed=SEED,checksum=hashlib.sha256(json.dumps(rows,sort_keys=True,ensure_ascii=False).encode()).hexdigest(),method='StandardScaler总体均值/标准差→KMeans欧氏距离，n_init=20、seed=3107；群号按原始中心排序，便于同一版本复核；轮廓系数用标准化空间。分群是行为相似性，不是会员价值或因果判断。')
+ return dict(n=len(rows),k=k,features=features,profiles=profiles,members=memberships,silhouette=float(silhouette_score(z,labels)),inertia=float(model.inertia_),scaler_mean=scaler.mean_.tolist(),scaler_scale=scaler.scale_.tolist(),seed=SEED,checksum=snapshot_checksum(rows),method='StandardScaler总体均值/标准差→KMeans欧氏距离，n_init=20、seed=3107；群号按原始中心排序，便于同一版本复核；轮廓系数用标准化空间。分群是行为相似性，不是会员价值或因果判断。')

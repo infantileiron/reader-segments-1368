@@ -16,8 +16,13 @@ class SegmentInput(BaseModel):
  def unique(cls,v):
   if len(set(v))!=len(v):raise ValueError('特征不能重复')
   return v
+class ReviewInput(BaseModel):
+ segment_id:int=Field(gt=0)
+ rounds:int=Field(default=5,ge=2,le=20)
+ threshold:float=Field(default=0.6,gt=0,le=1,allow_inf_nan=False)
 class OutreachInput(BaseModel):
  segment_id:int=Field(gt=0)
  cluster_id:int=Field(ge=0,le=5)
+ review_id:int=Field(gt=0)
  title:str=Field(min_length=2,max_length=100)
  note:str=Field(min_length=8,max_length=2000)

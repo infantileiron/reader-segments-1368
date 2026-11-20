@@ -290,8 +290,70 @@ ALTER TABLE ONLY public.outreaches
 
 
 --
+-- 稳定性复核与触达冻结依据（对应 src/models/entities.py 的 Review / OutreachBasis）
+--
+
+CREATE TABLE public.reviews (
+    id integer NOT NULL,
+    segment_id integer NOT NULL,
+    state character varying(20),
+    rounds integer,
+    threshold double precision,
+    features json,
+    k integer,
+    snapshot json,
+    checksum character varying(64),
+    data json,
+    error text,
+    created character varying(40),
+    updated character varying(40)
+);
+
+CREATE SEQUENCE public.reviews_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.reviews_id_seq OWNED BY public.reviews.id;
+ALTER TABLE ONLY public.reviews ALTER COLUMN id SET DEFAULT nextval('public.reviews_id_seq'::regclass);
+ALTER TABLE ONLY public.reviews ADD CONSTRAINT reviews_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.reviews ADD CONSTRAINT reviews_segment_id_fkey FOREIGN KEY (segment_id) REFERENCES public.segments(id);
+
+CREATE TABLE public.outreach_bases (
+    id integer NOT NULL,
+    outreach_id integer NOT NULL,
+    review_id integer NOT NULL,
+    review_digest character varying(64),
+    members json,
+    excluded json,
+    evidence json,
+    created character varying(40),
+    approved_at character varying(40),
+    approved_digest character varying(64)
+);
+
+CREATE SEQUENCE public.outreach_bases_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.outreach_bases_id_seq OWNED BY public.outreach_bases.id;
+ALTER TABLE ONLY public.outreach_bases ALTER COLUMN id SET DEFAULT nextval('public.outreach_bases_id_seq'::regclass);
+ALTER TABLE ONLY public.outreach_bases ADD CONSTRAINT outreach_bases_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.outreach_bases ADD CONSTRAINT outreach_bases_outreach_id_key UNIQUE (outreach_id);
+ALTER TABLE ONLY public.outreach_bases ADD CONSTRAINT outreach_bases_outreach_id_fkey FOREIGN KEY (outreach_id) REFERENCES public.outreaches(id);
+ALTER TABLE ONLY public.outreach_bases ADD CONSTRAINT outreach_bases_review_id_fkey FOREIGN KEY (review_id) REFERENCES public.reviews(id);
+
+--
 -- PostgreSQL database dump complete
 --
 
 \unrestrict BfWF97FxO8IFeK2VMnDkWNNbwX7BSN5jpdaShZxAsSbwa9c83qecCpECYHRE4Dg
+
 
